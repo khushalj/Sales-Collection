@@ -1,32 +1,37 @@
 import streamlit as st
 import pandas as pd
 
-# Load country codes from CSV file
-country_codes = pd.read_csv('https://raw.githubusercontent.com/khushalj/Sales-Collection/main/Country%20Codes.csv')
+# Create a function to save the data to a CSV file
+def save_data(name, phone, email, website, requirement, rate, timeline, status, amount):
+    data = pd.read_csv('leads.csv')
+    new_data = pd.DataFrame({'Name': [name], 'Phone': [phone], 'Email': [email], 'Website': [website], 
+                             'Requirement': [requirement], 'Rate Quoted': [rate], 'Timeline': [timeline], 
+                             'Deal Status': [status], 'Total Quotation Amount': [amount]})
+    data = data.append(new_data, ignore_index=True)
+    data.to_csv('leads.csv', index=False)
 
-# Define input fields for name, phone number, email, website, requirement, rate quoted, timeline, deal status, and total quotation amount
+# Create a list of country codes
+country_codes = ['+1', '+44', '+61', '+91']
+
+# Create a Streamlit app
+st.title('Lead Management System')
+st.write('Enter your lead information below:')
+
+# Create input fields for name, phone, email, website, requirement, rate, timeline, status, and amount
 name = st.text_input('Name')
-phone_number = st.number_input('Phone Number', format='%d', step=1)
-country_code = st.selectbox('Country Code', country_codes['Code'])
-email = st.text_input('Email ID')
+phone = st.number_input('Phone', format='%d', step=1)
+country_code = st.selectbox('Country Code', country_codes)
+email = st.text_input('Email')
 website = st.text_input('Website')
 requirement = st.text_area('Requirement')
-rate_quoted = st.number_input('Rate Quoted', format='%f')
-timeline = st.date_input('Timeline')
-deal_status = st.selectbox('Deal Status', ['Open', 'Close'])
-total_quotation_amount = st.number_input('Total Quotation Amount', format='%f')
+rate = st.number_input('Rate Quoted')
+timeline = st.text_input('Timeline')
+status = st.selectbox('Deal Status', ['Open', 'Close'])
+amount = st.number_input('Total Quotation Amount')
 
-# Add the data to a pandas DataFrame
-data = {'Name': [name],
-        'Phone Number': [str(country_code) + str(phone_number)],
-        'Email ID': [email],
-        'Website': [website],
-        'Requirement': [requirement],
-        'Rate Quoted': [rate_quoted],
-        'Timeline': [timeline],
-        'Deal Status': [deal_status],
-        'Total Quotation Amount': [total_quotation_amount]}
-df = pd.DataFrame(data)
+# Add the lead to the CSV file when the submit button is clicked
+if st.button('Submit'):
+    phone_number = country_code + str(phone)
+    save_data(name, phone_number, email, website, requirement, rate, timeline, status, amount)
+    st.write('Data saved to CSV file!')
 
-# Display the data in a table
-st.write(df)
