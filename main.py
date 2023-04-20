@@ -1,9 +1,13 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
+import pycountry
 
-# Define a list of country codes to use in the phone number field
-country_codes = ['+1', '+44', '+91', '+971', '+972', '+974']
+# Create a dictionary of country codes and names
+country_dict = {country.alpha_2: country.name for country in pycountry.countries}
+
+# Create a list of tuples for the country code dropdown
+country_codes = [f'{code} ({country_dict[code]})' for code in country_dict.keys()]
 
 # Create a Streamlit app
 st.title('Lead Form')
@@ -21,12 +25,15 @@ timeline = st.text_input('Timeline')
 deal_status = st.selectbox('Deal Status', ['Open', 'Close'])
 total_quotation_amount = st.number_input('Total Quotation Amount', value=0.0)
 
+# Extract the country code from the dropdown value
+country_code = phone_country_code.split()[0]
+
 # Create a button to submit the form
 if st.button('Submit'):
     # Store the data in a Pandas DataFrame
     data = {
         'Name': [name],
-        'Phone Number': [f'{phone_country_code}{phone_number}'],
+        'Phone Number': [f'{country_code}{phone_number}'],
         'Email': [email],
         'Website': [website],
         'Requirement': [requirement],
