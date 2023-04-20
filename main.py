@@ -22,30 +22,27 @@ st.write('Enter your lead information below:')
 
 # Create input fields for name, phone, email, website, requirement, rate, currency, timeline, status, and amount
 name = st.text_input('Name')
-phone_col, currency_col = st.columns(2)
-with phone_col:
-    phone = st.number_input('Phone', format='%d', step=1)
-with currency_col:
-    currency = st.selectbox('Currency', currencies)
-country_code_col, phone_col = st.columns(2)
+phone_col, country_code_col = st.columns(2)
 with country_code_col:
-    country_code = st.selectbox('Country Code', country_codes)
+    country_code = st.selectbox('Country Code', country_codes, key='country_code', width=100)
 with phone_col:
-    phone_number = st.text_input('Phone Number')
+    phone_number = st.text_input('Phone Number', key='phone_number')
+    phone_number = country_code + phone_number
 email = st.text_input('Email')
 website = st.text_input('Website')
 requirement = st.text_area('Requirement')
-rate_col, amount_col = st.columns(2)
+rate_col, amount_col, currency_col = st.columns(3)
 with rate_col:
     rate = st.number_input('Rate Quoted')
 with amount_col:
     amount = st.number_input('Total Quotation Amount')
+with currency_col:
+    currency = st.selectbox('Currency', currencies)
 timeline = st.text_input('Timeline')
 status = st.selectbox('Deal Status', ['Open', 'Close'])
 
 # Add the lead to the CSV file when the submit button is clicked
 if st.button('Submit'):
-    phone_number = country_code + phone_number
     rate_quoted = str(rate) + currency
     total_quotation_amount = str(amount) + currency
     save_data(name, phone_number, email, website, requirement, rate_quoted, currency, timeline, status, total_quotation_amount)
