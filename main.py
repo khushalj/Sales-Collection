@@ -1,49 +1,56 @@
 import streamlit as st
-import pandas as pd
+import gspread
+from oauth2client.service_account import ServiceAccountCredentials
 
-# Create a function to save the data to a CSV file
-def save_data(name, phone, email, website, requirement, rate, currency, timeline, status, amount):
-    data = pd.read_csv('leads.csv')
-    new_data = pd.DataFrame({'Name': [name], 'Phone': [phone], 'Email': [email], 'Website': [website], 
-                             'Requirement': [requirement], 'Rate Quoted': [rate], 'Currency': [currency], 'Timeline': [timeline], 
-                             'Deal Status': [status], 'Total Quotation Amount': [amount]})
-    data = data.append(new_data, ignore_index=True)
-    data.to_csv('leads.csv', index=False)
+# Authenticate Google Sheets API credentials
+scope = ['https://spreadsheets.google.com/feeds',
+         'https://www.googleapis.com/auth/drive']
+creds = ServiceAccountCredentials.from_json_keyfile_name('https://raw.githubusercontent.com/khushalj/Sales-Collection/main/client_secret_330242038577-me3o3fff5phglev87nhpggt4eo603b5t.apps.googleusercontent.com.json', scope)
+client = gspread.authorize(creds)
+sheet_name = "SalesLeads1"
+worksheet_name = "Sheet1"
+worksheet = client.open(sheet_name).worksheet(worksheet_name)
 
-# Create a list of country codes
-country_codes = ['+1', '+44', '+61', '+91']
+# Define form inputs
+st.sidebar.title("Sales Lead Form")
+st.sidebar.write("Enter the following details:")
+name = st.sidebar.text_input("Name")
+col1, col2 = st.sidebar.beta_columns([1, 2])
+with col1:
+    country_codes = ["+91", "+1", "+44"]
+    country_code = st.selectbox("Country Code", country_codes)
+with col2:
+    phone_number = st.number_input("Phone Number", step=1)
+email = st.sidebar.text_input("Email ID")
+website = st.sidebar.text_input("Website")
+requirement = st.sidebar.text_area("Requirement")
+col3, col4 = st.sidebar.beta_columns([2, 1])
+with col3:
+    rate_quoted = st.number_input("Rate Quoted")
+with col4:
+    currencies = ["₹", "$"]
+    currency = st.selectbox("Currency", currencies)
+quotation_amount = st.sidebar.number_input("Total Quotation Amount")
+timeline = st.sidebar.date_input("Timeline")
+deal_status = st.sidebar.radio("Deal Status", options=["Open", "Close"])
 
-# Create a list of currencies
-currencies = ['₹', '$']
+# Define form submission action
+def on_submit():
+    name = st.session_state.name
+    phone_number = st.session_state.country_code + str(int(st.session_state.phone_number))
+    email = st.session_state.email
+    website = st.session_state.website
+    requirement = st.session_state.requirement
+    rate_quoted = str(st.session_state.rate_quoted) + st.session_state.currency
+    quotation_amount = st.session_state.quotation_amount
+    timeline = st.session_state.timeline.strftime("%m/%d/%Y")
+    deal_status = st.session_state.deal_status
+    
+    # Create a new row in the Google Sheet with the form data
+    row = [name, phone_number, email, website, requirement, rate_quoted, quotation_amount, timeline, deal_status]
+    worksheet.append_row(row)
+    
+    st.success('Form submitted successfully!')
 
-# Create a Streamlit app
-st.title('Lead Management System')
-st.write('Enter your lead information below:')
-
-# Create input fields for name, phone, email, website, requirement, rate, currency, timeline, status, and amount
-name = st.text_input('Name')
-country_code_col, phone_col = st.columns(2)
-with country_code_col:
-    country_code = st.selectbox('Country Code', country_codes)
-with phone_col:
-    phone_number = st.text_input('Phone Number')
-email = st.text_input('Email')
-website = st.text_input('Website')
-requirement = st.text_area('Requirement')
-rate_col, amount_col, currency_col = st.columns(3)
-with rate_col:
-    rate = st.number_input('Rate Quoted')
-with amount_col:
-    amount = st.number_input('Total Quotation Amount')
-with currency_col:
-    currency = st.selectbox('Currency', currencies)
-timeline = st.text_input('Timeline')
-status = st.selectbox('Deal Status', ['Open', 'Close'])
-
-# Add the lead to the CSV file when the submit button is clicked
-if st.button('Submit'):
-    phone_number = country_code + phone_number
-    rate_quoted = str(rate) + currency
-    total_quotation_amount = str(amount) + currency
-    save_data(name, phone_number, email, website, requirement, rate_quoted, currency, timeline, status, total_quotation_amount)
-    st.write('Data saved to CSV file!')
+# Add form submission button
+st.sidebar.button("Submit", on_click=on_submit)
